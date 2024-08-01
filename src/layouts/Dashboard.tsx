@@ -52,7 +52,6 @@ const items = [
 
 const Dashboard = () => {
   const { logout } = useLogout();
-
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer },
@@ -90,7 +89,14 @@ const Dashboard = () => {
             }}
           >
             <Flex gap="middle" align="start" justify="space-between">
-              <Badge text="Global" status="success" />
+              <Badge
+                text={
+                  user.role === "admin"
+                    ? "You are an admin"
+                    : user?.tenant?.name
+                }
+                status="success"
+              />
               <Space size={16}>
                 <Badge dot={true}>
                   <BellFilled />
@@ -116,7 +122,7 @@ const Dashboard = () => {
               </Space>
             </Flex>
           </Header>
-          <Content style={{ margin: "0 16px" }}>
+          <Content style={{ margin: "24px" }}>
             <Outlet />
           </Content>
           <Footer style={{ textAlign: "center" }}>
