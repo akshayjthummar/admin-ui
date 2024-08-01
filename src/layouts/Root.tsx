@@ -23,8 +23,6 @@ const Root = () => {
     },
   });
   useEffect(() => {
-    console.log(data);
-
     if (data) {
       setUser(data);
     }
