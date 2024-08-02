@@ -1,4 +1,4 @@
-import { Breadcrumb, Button, Drawer, Space, Table } from "antd";
+import { Breadcrumb, Button, Drawer, Form, Space, Table, theme } from "antd";
 import { RightOutlined } from "@ant-design/icons";
 import { Link, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -59,6 +59,10 @@ const UserPagae = () => {
   if (user?.role !== "admin") {
     return <Navigate to={"/"} replace={true} />;
   }
+
+  const {
+    token: { colorBgLayout },
+  } = theme.useToken();
   return (
     <>
       <Space size={"large"} style={{ width: "100%" }} direction="vertical">
@@ -101,9 +105,11 @@ const UserPagae = () => {
               <Button type="primary">Submit</Button>
             </Space>
           }
-          styles={{ body: { background: "red" } }}
+          styles={{ body: { background: colorBgLayout } }}
         >
-          <UserForm />
+          <Form layout="vertical">
+            <UserForm />
+          </Form>
         </Drawer>
       </Space>
     </>
