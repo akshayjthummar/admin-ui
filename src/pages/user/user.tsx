@@ -8,6 +8,7 @@ import { useAuthStore } from "../../store";
 import UserFilters from "./UserFilters";
 import { useState } from "react";
 import { PlusOutlined } from "@ant-design/icons";
+import UserForm from "./form/UserForm";
 
 const columns = [
   {
@@ -100,9 +101,9 @@ const UserPagae = () => {
               <Button type="primary">Submit</Button>
             </Space>
           }
+          styles={{ body: { background: "red" } }}
         >
-          <p>Something...</p>
-          <p>Something...</p>
+          <UserForm />
         </Drawer>
       </Space>
     </>
