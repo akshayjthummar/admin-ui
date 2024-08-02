@@ -13,6 +13,7 @@ export interface User {
   lastName: number;
   email: string;
   createdAt: string;
+  tenant: Tenant | null;
 }
 
 export type CreateUserData = {

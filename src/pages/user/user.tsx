@@ -26,7 +26,7 @@ import { useMemo, useState } from "react";
 import { PlusOutlined } from "@ant-design/icons";
 import UserForm from "./form/UserForm";
 import { PER_PAGE } from "../../constant";
-import { debounce, values } from "lodash";
+import { debounce } from "lodash";
 
 const columns = [
   {
@@ -56,6 +56,14 @@ const columns = [
     title: "Role",
     dataIndex: "role",
     key: "role",
+  },
+  {
+    title: "Restaurant",
+    dataIndex: "tenant",
+    key: "tenant",
+    render: (_text: string, record: User) => {
+      return <div>{record?.tenant?.name}</div>;
+    },
   },
 ];
 
