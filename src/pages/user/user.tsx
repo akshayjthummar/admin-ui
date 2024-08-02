@@ -19,7 +19,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { createUser, getUsers } from "../../http/api";
-import { CreateUserData, User } from "../../types";
+import { CreateUserData, FieldData, User } from "../../types";
 import { useAuthStore } from "../../store";
 import UserFilters from "./UserFilters";
 import { useState } from "react";
@@ -60,6 +60,7 @@ const columns = [
 
 const UserPagae = () => {
   const [form] = Form.useForm();
+  const [filterForm] = Form.useForm();
   const queryClient = useQueryClient();
   const [queryParams, setQueryParams] = useState({
     perPage: PER_PAGE,
@@ -74,8 +75,11 @@ const UserPagae = () => {
   } = useQuery({
     queryKey: ["users", queryParams],
     queryFn: async () => {
+      const filterdParams = Object.fromEntries(
+        Object.entries(queryParams).filter((item) => !!item[1])
+      );
       const queryString = new URLSearchParams(
-        queryParams as unknown as Record<string, string>
+        filterdParams as unknown as Record<string, string>
       ).toString();
       return await getUsers(queryString).then((res) => res.data);
     },
@@ -98,6 +102,14 @@ const UserPagae = () => {
     form.resetFields();
     setDrawerOpen(false);
   };
+  const onFilterChange = (changedFileds: FieldData[]) => {
+    const changedFilterFields = changedFileds
+      .map((item) => ({
+        [item.name[0]]: item.value,
+      }))
+      .reduce((acc, item) => ({ ...acc, ...item }), {});
+    setQueryParams((prev) => ({ ...prev, ...changedFilterFields }));
+  };
 
   const { user } = useAuthStore();
   if (user?.role !== "admin") {
@@ -107,6 +119,7 @@ const UserPagae = () => {
   const {
     token: { colorBgLayout },
   } = theme.useToken();
+
   return (
     <>
       <Space size={"large"} style={{ width: "100%" }} direction="vertical">
@@ -130,20 +143,17 @@ const UserPagae = () => {
             <Typography.Text type="danger">{error.message}</Typography.Text>
           )}
         </Flex>
-        <UserFilters
-          onFilterChange={(filterName, filterValue) => {
-            console.log(filterName);
-            console.log(filterValue);
-          }}
-        >
-          <Button
-            icon={<PlusOutlined />}
-            onClick={() => setDrawerOpen(true)}
-            type="primary"
-          >
-            Add User
-          </Button>
-        </UserFilters>
+        <Form form={filterForm} onFieldsChange={onFilterChange}>
+          <UserFilters>
+            <Button
+              icon={<PlusOutlined />}
+              onClick={() => setDrawerOpen(true)}
+              type="primary"
+            >
+              Add User
+            </Button>
+          </UserFilters>
+        </Form>
         <Table
           columns={columns}
           dataSource={users?.data}
