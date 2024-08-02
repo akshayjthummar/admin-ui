@@ -22,10 +22,11 @@ import { createUser, getUsers } from "../../http/api";
 import { CreateUserData, FieldData, User } from "../../types";
 import { useAuthStore } from "../../store";
 import UserFilters from "./UserFilters";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PlusOutlined } from "@ant-design/icons";
 import UserForm from "./form/UserForm";
 import { PER_PAGE } from "../../constant";
+import { debounce, values } from "lodash";
 
 const columns = [
   {
@@ -102,13 +103,23 @@ const UserPagae = () => {
     form.resetFields();
     setDrawerOpen(false);
   };
+  const debouncedQUpdate = useMemo(() => {
+    return debounce((values: string | undefined) => {
+      setQueryParams((prev) => ({ ...prev, q: values }));
+    }, 300);
+  }, []);
   const onFilterChange = (changedFileds: FieldData[]) => {
     const changedFilterFields = changedFileds
       .map((item) => ({
         [item.name[0]]: item.value,
       }))
       .reduce((acc, item) => ({ ...acc, ...item }), {});
-    setQueryParams((prev) => ({ ...prev, ...changedFilterFields }));
+
+    if ("q" in changedFilterFields) {
+      debouncedQUpdate(changedFilterFields.q);
+    } else {
+      setQueryParams((prev) => ({ ...prev, ...changedFilterFields }));
+    }
   };
 
   const { user } = useAuthStore();
