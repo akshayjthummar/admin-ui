@@ -9,6 +9,7 @@ import UserFilters from "./UserFilters";
 import { useState } from "react";
 import { PlusOutlined } from "@ant-design/icons";
 import UserForm from "./form/UserForm";
+import { PER_PAGE } from "../../constant";
 
 const columns = [
   {
@@ -44,6 +45,10 @@ const columns = [
 const UserPagae = () => {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
+  const [queryParams, setQueryParams] = useState({
+    perPage: PER_PAGE,
+    currentPage: 1,
+  });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const {
     data: users,
@@ -51,9 +56,12 @@ const UserPagae = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["users"],
+    queryKey: ["users", queryParams],
     queryFn: async () => {
-      return await getUsers().then((res) => res.data);
+      const queryString = new URLSearchParams(
+        queryParams as unknown as Record<string, string>
+      ).toString();
+      return await getUsers(queryString).then((res) => res.data);
     },
   });
 
@@ -108,7 +116,25 @@ const UserPagae = () => {
             Add User
           </Button>
         </UserFilters>
-        <Table columns={columns} dataSource={users} rowKey={"id"} />
+        <Table
+          columns={columns}
+          dataSource={users?.data}
+          rowKey={"id"}
+          pagination={{
+            total: users?.total,
+            pageSize: queryParams.perPage,
+            current: queryParams.currentPage,
+            onChange: (page, pageSize) => {
+              setQueryParams((prev) => {
+                return {
+                  ...prev,
+                  perPage: pageSize || PER_PAGE,
+                  currentPage: page,
+                };
+              });
+            },
+          }}
+        />
 
         <Drawer
           title={"Create User"}

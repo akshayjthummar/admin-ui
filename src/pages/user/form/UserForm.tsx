@@ -124,7 +124,10 @@ const UserForm = () => {
                     {restaurants &&
                       restaurants.map((restaurant: Tenant) => {
                         return (
-                          <Select.Option value={restaurant?.id}>
+                          <Select.Option
+                            value={restaurant?.id}
+                            key={restaurant?.id}
+                          >
                             {restaurant?.name}
                           </Select.Option>
                         );
