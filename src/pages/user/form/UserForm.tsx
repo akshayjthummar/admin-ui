@@ -10,7 +10,6 @@ const UserForm = () => {
       return await getRestaurants().then((res) => res.data);
     },
   });
-  console.log(restaurants);
 
   return (
     <Row>

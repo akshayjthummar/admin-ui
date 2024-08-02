@@ -14,3 +14,13 @@ export interface User {
   email: string;
   createdAt: string;
 }
+
+export type CreateUserData = {
+  id: number;
+  firstName: number;
+  lastName: number;
+  email: string;
+  createdAt: string;
+  role: string;
+  tenantId: number;
+};

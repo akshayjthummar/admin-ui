@@ -1,9 +1,9 @@
 import { Breadcrumb, Button, Drawer, Form, Space, Table, theme } from "antd";
 import { RightOutlined } from "@ant-design/icons";
 import { Link, Navigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { getUsers } from "../../http/api";
-import { User } from "../../types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createUser, getUsers } from "../../http/api";
+import { CreateUserData, User } from "../../types";
 import { useAuthStore } from "../../store";
 import UserFilters from "./UserFilters";
 import { useState } from "react";
@@ -42,6 +42,8 @@ const columns = [
 ];
 
 const UserPagae = () => {
+  const [form] = Form.useForm();
+  const queryClient = useQueryClient();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const {
     data: users,
@@ -54,6 +56,23 @@ const UserPagae = () => {
       return await getUsers().then((res) => res.data);
     },
   });
+
+  const { mutate: userMutate } = useMutation({
+    mutationKey: ["user"],
+    mutationFn: async (data: CreateUserData) =>
+      createUser(data).then((res) => res.data),
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      return;
+    },
+  });
+
+  const onHandleSubmit = async () => {
+    await form.validateFields();
+    userMutate(form.getFieldsValue());
+    form.resetFields();
+    setDrawerOpen(false);
+  };
 
   const { user } = useAuthStore();
   if (user?.role !== "admin") {
@@ -97,17 +116,32 @@ const UserPagae = () => {
           destroyOnClose
           open={drawerOpen}
           onClose={() => {
+            form.resetFields();
             setDrawerOpen(false);
           }}
           extra={
             <Space>
-              <Button onClick={() => setDrawerOpen(true)}>Cancel</Button>
-              <Button type="primary">Submit</Button>
+              <Button
+                onClick={() => {
+                  form.resetFields();
+                  setDrawerOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  onHandleSubmit();
+                }}
+              >
+                Submit
+              </Button>
             </Space>
           }
           styles={{ body: { background: colorBgLayout } }}
         >
-          <Form layout="vertical">
+          <Form layout="vertical" form={form}>
             <UserForm />
           </Form>
         </Drawer>
