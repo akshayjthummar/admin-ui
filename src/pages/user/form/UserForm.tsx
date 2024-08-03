@@ -59,7 +59,11 @@ const UserForm = ({ isEditMode = false }: { isEditMode: boolean }) => {
                   },
                 ]}
               >
-                <Input size="large" type="email" />
+                <Input
+                  disabled={isEditMode ? true : false}
+                  size="large"
+                  type="email"
+                />
               </Form.Item>
             </Col>
           </Card>
