@@ -88,8 +88,8 @@ const Restuarant = () => {
   };
   const debouncedQUpdate = useMemo(() => {
     return debounce((values: string | undefined) => {
-      setQueryParams((prev) => ({ ...prev, q: values }));
-    }, 300);
+      setQueryParams((prev) => ({ ...prev, q: values, currentPage: 1 }));
+    }, 500);
   }, []);
   const {
     token: { colorBgLayout },

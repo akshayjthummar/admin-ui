@@ -113,8 +113,8 @@ const UserPagae = () => {
   };
   const debouncedQUpdate = useMemo(() => {
     return debounce((values: string | undefined) => {
-      setQueryParams((prev) => ({ ...prev, q: values }));
-    }, 300);
+      setQueryParams((prev) => ({ ...prev, q: values, currentPage: 1 }));
+    }, 500);
   }, []);
   const onFilterChange = (changedFileds: FieldData[]) => {
     const changedFilterFields = changedFileds
@@ -126,7 +126,11 @@ const UserPagae = () => {
     if ("q" in changedFilterFields) {
       debouncedQUpdate(changedFilterFields.q);
     } else {
-      setQueryParams((prev) => ({ ...prev, ...changedFilterFields }));
+      setQueryParams((prev) => ({
+        ...prev,
+        ...changedFilterFields,
+        currentPage: 1,
+      }));
     }
   };
 
