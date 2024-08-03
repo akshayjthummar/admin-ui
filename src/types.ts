@@ -7,17 +7,17 @@ export interface Tenant {
   name: string;
   address: string;
 }
-export interface User {
-  id: number;
-  firstName: number;
-  lastName: number;
+
+export type User = {
+  id: string;
   email: string;
+  firstName: string;
+  lastName: string;
   createdAt: string;
   tenant: Tenant | null;
-}
-
+};
 export type CreateUserData = {
-  id: number;
+  id: string;
   firstName: number;
   lastName: number;
   email: string;

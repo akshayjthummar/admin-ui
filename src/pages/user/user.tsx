@@ -18,11 +18,11 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { createUser, getUsers } from "../../http/api";
+import { createUser, getUsers, updateUser } from "../../http/api";
 import { CreateUserData, FieldData, User } from "../../types";
 import { useAuthStore } from "../../store";
 import UserFilters from "./UserFilters";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PlusOutlined } from "@ant-design/icons";
 import UserForm from "./form/UserForm";
 import { PER_PAGE } from "../../constant";
@@ -76,6 +76,19 @@ const UserPagae = () => {
     currentPage: 1,
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentEditingUser, setCurrentEditingUser] = useState<User | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (currentEditingUser) {
+      setDrawerOpen(true);
+      form.setFieldsValue({
+        ...currentEditingUser,
+        tenantId: currentEditingUser.tenant?.id,
+      });
+    }
+  }, [currentEditingUser, form]);
   const {
     data: users,
     isFetching,
@@ -105,10 +118,27 @@ const UserPagae = () => {
     },
   });
 
+  const { mutate: UpdateUserMutation } = useMutation({
+    mutationKey: ["update-user"],
+    mutationFn: async (data: CreateUserData) => {
+      updateUser(data, currentEditingUser!.id).then((res) => res.data);
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      return;
+    },
+  });
+
   const onHandleSubmit = async () => {
     await form.validateFields();
-    userMutate(form.getFieldsValue());
+    const isEditMode = !!currentEditingUser;
+    if (isEditMode) {
+      await UpdateUserMutation(form.getFieldsValue());
+    } else {
+      await userMutate(form.getFieldsValue());
+    }
     form.resetFields();
+    setCurrentEditingUser(null);
     setDrawerOpen(false);
   };
   const debouncedQUpdate = useMemo(() => {
@@ -178,7 +208,26 @@ const UserPagae = () => {
           </UserFilters>
         </Form>
         <Table
-          columns={columns}
+          columns={[
+            ...columns,
+            {
+              title: "Actions",
+              render: (_: string, record: User) => {
+                return (
+                  <Space>
+                    <Button
+                      onClick={() => {
+                        setCurrentEditingUser(record);
+                      }}
+                      type="link"
+                    >
+                      Edit
+                    </Button>
+                  </Space>
+                );
+              },
+            },
+          ]}
           dataSource={users?.data}
           rowKey={"id"}
           pagination={{
@@ -201,13 +250,14 @@ const UserPagae = () => {
         />
 
         <Drawer
-          title={"Create User"}
+          title={currentEditingUser === null ? "Add User" : "Update User"}
           width={720}
           destroyOnClose
           open={drawerOpen}
           onClose={() => {
             form.resetFields();
             setDrawerOpen(false);
+            setCurrentEditingUser(null);
           }}
           extra={
             <Space>
@@ -215,6 +265,7 @@ const UserPagae = () => {
                 onClick={() => {
                   form.resetFields();
                   setDrawerOpen(false);
+                  setCurrentEditingUser(null);
                 }}
               >
                 Cancel
@@ -225,14 +276,14 @@ const UserPagae = () => {
                   onHandleSubmit();
                 }}
               >
-                Submit
+                {currentEditingUser === null ? "Submit" : "Update"}
               </Button>
             </Space>
           }
           styles={{ body: { background: colorBgLayout } }}
         >
           <Form layout="vertical" form={form}>
-            <UserForm />
+            <UserForm isEditMode={!!currentEditingUser} />
           </Form>
         </Drawer>
       </Space>

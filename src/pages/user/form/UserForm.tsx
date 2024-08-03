@@ -3,11 +3,13 @@ import { Card, Col, Form, Input, Row, Select, Space } from "antd";
 import { getRestaurants } from "../../../http/api";
 import { Tenant } from "../../../types";
 
-const UserForm = () => {
+const UserForm = ({ isEditMode = false }: { isEditMode: boolean }) => {
   const { data: restaurants } = useQuery({
     queryKey: ["restaurants"],
     queryFn: async () => {
-      return await getRestaurants().then((res) => res.data);
+      return await getRestaurants(`perPage=100&currentPage=1`).then(
+        (res) => res.data
+      );
     },
   });
 
@@ -61,24 +63,26 @@ const UserForm = () => {
               </Form.Item>
             </Col>
           </Card>
-          <Card title="Security info">
-            <Row gutter={10}>
-              <Col span={12}>
-                <Form.Item
-                  label="Password"
-                  name="password"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Password is required",
-                    },
-                  ]}
-                >
-                  <Input size="large" type="password" />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Card>
+          {!isEditMode && (
+            <Card title="Security info">
+              <Row gutter={10}>
+                <Col span={12}>
+                  <Form.Item
+                    label="Password"
+                    name="password"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Password is required",
+                      },
+                    ]}
+                  >
+                    <Input size="large" type="password" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+          )}
           <Card title="Roles info">
             <Row gutter={10}>
               <Col span={12}>
@@ -93,6 +97,7 @@ const UserForm = () => {
                   ]}
                 >
                   <Select
+                    id="selectBoxInUserForm"
                     size="large"
                     style={{ width: "100%" }}
                     allowClear={true}
@@ -121,17 +126,11 @@ const UserForm = () => {
                     allowClear={true}
                     placeholder="Select restaurant"
                   >
-                    {restaurants &&
-                      restaurants.map((restaurant: Tenant) => {
-                        return (
-                          <Select.Option
-                            value={restaurant?.id}
-                            key={restaurant?.id}
-                          >
-                            {restaurant?.name}
-                          </Select.Option>
-                        );
-                      })}
+                    {restaurants?.data.map((restaurant: Tenant) => (
+                      <Select.Option value={restaurant.id} key={restaurant.id}>
+                        {restaurant.name}
+                      </Select.Option>
+                    ))}
                   </Select>
                 </Form.Item>
               </Col>
