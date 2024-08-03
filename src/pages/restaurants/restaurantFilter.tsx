@@ -13,7 +13,7 @@ const RestaurantFilter = ({
         <Col>
           <Input.Search
             placeholder="Search"
-            onChange={(e) => onFilterChange("searchFilter", e.target.value)}
+            onChange={(e) => onFilterChange("q", e.target.value)}
           />
         </Col>
         <Col>{children}</Col>
