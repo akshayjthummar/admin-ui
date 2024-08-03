@@ -19,3 +19,5 @@ export const updateUser = (user: CreateUserData, id: string) =>
 export const getRestaurants = (queryString: string) =>
   api.get(`/tenants?${queryString}`);
 export const createTenant = (tenant: Tenant) => api.post("/tenants", tenant);
+export const updateTenant = (tenant: Tenant, id: number) =>
+  api.patch(`/tenants/${id}`, tenant);

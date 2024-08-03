@@ -22,9 +22,9 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { createTenant, getRestaurants } from "../../http/api";
+import { createTenant, getRestaurants, updateTenant } from "../../http/api";
 import RestaurantFilter from "./restaurantFilter";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import RestaurantForm from "./form/restaurantForm";
 import { Tenant } from "../../types";
 import { PER_PAGE } from "../../constant";
@@ -56,6 +56,16 @@ const Restuarant = () => {
     perPage: PER_PAGE,
     currentPage: 1,
   });
+  const [currentRestaurant, setCurrentRestaurant] = useState<Tenant | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (currentRestaurant) {
+      setDrawerOpen(true);
+      form.setFieldsValue(currentRestaurant);
+    }
+  }, [currentRestaurant, form]);
   const {
     data: restaurants,
     isFetching,
@@ -80,10 +90,29 @@ const Restuarant = () => {
       return queryClient.invalidateQueries({ queryKey: ["restaurants"] });
     },
   });
+
+  const { mutate: tenantUpdateMutate } = useMutation({
+    mutationKey: ["update-tenant"],
+    mutationFn: async (data: Tenant) => {
+      return await updateTenant(data, currentRestaurant!.id).then(
+        (res) => res.data
+      );
+    },
+    onSuccess: () => {
+      return queryClient.invalidateQueries({ queryKey: ["restaurants"] });
+    },
+  });
+
   const onHandleSubmit = async () => {
     await form.validateFields();
-    tenantMutate(form.getFieldsValue());
+    const isEditMode = !!currentRestaurant;
+    if (!isEditMode) {
+      await tenantMutate(form.getFieldsValue());
+    } else {
+      await tenantUpdateMutate(form.getFieldsValue());
+    }
     form.resetFields();
+    setCurrentRestaurant(null);
     setDrawerOpen(false);
   };
   const debouncedQUpdate = useMemo(() => {
@@ -131,7 +160,26 @@ const Restuarant = () => {
         </Button>
       </RestaurantFilter>
       <Table
-        columns={colums}
+        columns={[
+          ...colums,
+          {
+            title: "Actions",
+            render: (_text: string, record: Tenant) => {
+              return (
+                <Space>
+                  <Button
+                    onClick={() => {
+                      setCurrentRestaurant(record);
+                    }}
+                    type="link"
+                  >
+                    Edit
+                  </Button>
+                </Space>
+              );
+            },
+          },
+        ]}
         dataSource={restaurants?.data}
         rowKey={"id"}
         pagination={{
@@ -156,11 +204,14 @@ const Restuarant = () => {
         styles={{ body: { background: colorBgLayout } }}
         width={720}
         open={drawerOpen}
-        title="Craete Restaurant"
+        title={
+          currentRestaurant === null ? "Add Restaurent" : "Edit Restaurent"
+        }
         destroyOnClose
         onClose={() => {
           form.resetFields();
           setDrawerOpen(false);
+          setCurrentRestaurant(null);
         }}
         extra={
           <Space>
@@ -168,12 +219,13 @@ const Restuarant = () => {
               onClick={() => {
                 form.resetFields();
                 setDrawerOpen(false);
+                setCurrentRestaurant(null);
               }}
             >
               Cancel
             </Button>
             <Button type="primary" onClick={() => onHandleSubmit()}>
-              Submit
+              {currentRestaurant === null ? "Submit" : "Edit"}
             </Button>
           </Space>
         }
