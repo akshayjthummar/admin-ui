@@ -8,9 +8,14 @@ import {
   Image,
   Typography,
   Tag,
+  Spin,
 } from "antd";
 import { Link } from "react-router-dom";
-import { RightOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  RightOutlined,
+  PlusOutlined,
+  LoadingOutlined,
+} from "@ant-design/icons";
 import ProductFilters from "./ProductFilters";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -83,9 +88,9 @@ const Products = () => {
 
   const {
     data: products,
-    // isFetching,
-    // isError,
-    // error,
+    isFetching,
+    isError,
+    error,
   } = useQuery({
     queryKey: ["products", queryParams],
     queryFn: async () => {
@@ -135,6 +140,17 @@ const Products = () => {
               { title: "Products" },
             ]}
           />
+          {isFetching && (
+            <Spin
+              indicator={<LoadingOutlined />}
+              style={{ fontSize: 24 }}
+              spinning
+            />
+          )}
+
+          {isError && (
+            <Typography.Text type="danger">{error.message}</Typography.Text>
+          )}
         </Flex>
         <Form form={filterForm} onFieldsChange={onFilterChange}>
           <ProductFilters>
