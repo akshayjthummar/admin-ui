@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { getCategories, getRestaurants } from "../../http/api";
-import { Tenant } from "../../store";
+import { Tenant, useAuthStore } from "../../store";
 import { Category } from "../../types";
 
 interface ProductFiltersProps {
@@ -31,6 +31,7 @@ const ProductFilters = ({ children }: ProductFiltersProps) => {
       return getCategories();
     },
   });
+  const { user } = useAuthStore();
 
   return (
     <Card>
@@ -60,23 +61,29 @@ const ProductFilters = ({ children }: ProductFiltersProps) => {
                 </Select>
               </Form.Item>
             </Col>
-            <Col span={6}>
-              <Form.Item name="tenantId">
-                <Select
-                  style={{ width: "100%" }}
-                  allowClear={true}
-                  placeholder="Select Restaurent"
-                >
-                  {restaurent?.data.data.map((restaurant: Tenant) => {
-                    return (
-                      <Select.Option key={restaurant.id} value={restaurant.id}>
-                        {restaurant.name}
-                      </Select.Option>
-                    );
-                  })}
-                </Select>
-              </Form.Item>
-            </Col>
+            {user?.role === "admin" && (
+              <Col span={6}>
+                <Form.Item name="tenantId">
+                  <Select
+                    style={{ width: "100%" }}
+                    allowClear={true}
+                    placeholder="Select Restaurent"
+                  >
+                    {restaurent?.data.data.map((restaurant: Tenant) => {
+                      return (
+                        <Select.Option
+                          key={restaurant.id}
+                          value={restaurant.id}
+                        >
+                          {restaurant.name}
+                        </Select.Option>
+                      );
+                    })}
+                  </Select>
+                </Form.Item>
+              </Col>
+            )}
+
             <Col span={6}>
               <Space>
                 <Form.Item name="isPublish">
