@@ -40,6 +40,10 @@ export type Product = {
   createdAt: string;
   image: string;
 };
+export type ImageFiled = { file: File };
+export type CreateProductData = Product & {
+  image: ImageFiled;
+};
 
 export interface PriceConfiguration {
   [key: string]: {
