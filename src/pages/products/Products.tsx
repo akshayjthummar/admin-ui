@@ -97,7 +97,7 @@ const Products = () => {
   const [queryParams, setQueryParams] = useState({
     limit: PER_PAGE,
     page: 1,
-    tenantId: user?.role === "manager" ? user?.tenant : undefined,
+    tenantId: user?.role === "manager" ? user?.tenant.id : undefined,
   });
 
   const {
@@ -183,6 +183,10 @@ const Products = () => {
     );
     const postData = {
       ...form.getFieldsValue(),
+      tenantId:
+        user?.role === "manager"
+          ? user.tenant.id
+          : form.getFieldValue("tenantId"),
       isPublish: form.getFieldValue("isPublish") ? true : null,
       categoryId,
       attributes,
