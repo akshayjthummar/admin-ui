@@ -144,7 +144,7 @@ const Products = () => {
   };
 
   const queryClient = useQueryClient();
-  const { mutate: productMutate } = useMutation({
+  const { mutate: productMutate, isPending } = useMutation({
     mutationKey: ["product"],
     mutationFn: async (data: FormData) =>
       createProduct(data).then((res) => res.data),
@@ -183,7 +183,7 @@ const Products = () => {
     );
     const postData = {
       ...form.getFieldsValue(),
-      isPublish: form.getFieldValue("isPublish") ? true : "",
+      isPublish: form.getFieldValue("isPublish") ? true : null,
       categoryId,
       attributes,
       priceConfiguration: pricing,
@@ -287,6 +287,7 @@ const Products = () => {
                 Cancel
               </Button>
               <Button
+                loading={isPending}
                 type="primary"
                 onClick={() => {
                   onHandleSubmit();
