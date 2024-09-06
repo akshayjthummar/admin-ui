@@ -31,6 +31,11 @@ export type FieldData = {
   value?: string;
 };
 
+export type ProductAttributes = {
+  name: string;
+  value: string | boolean;
+};
+
 export type Product = {
   _id: string;
   name: string;
@@ -39,6 +44,8 @@ export type Product = {
   isPublish: boolean;
   createdAt: string;
   image: string;
+  priceConfiguration: PriceConfiguration;
+  attributes: ProductAttributes[];
 };
 export type ImageFiled = { file: File };
 export type CreateProductData = Product & {

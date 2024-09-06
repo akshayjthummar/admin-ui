@@ -2,9 +2,10 @@ import { Form, message, Space, Typography, Upload, UploadProps } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useState } from "react";
 
-const ProductImage = () => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ProductImage = ({ initailImage }: { initailImage: any }) => {
   const [messageApi, contextHolder] = message.useMessage();
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(initailImage);
 
   const uploadConfig: UploadProps = {
     name: "file",

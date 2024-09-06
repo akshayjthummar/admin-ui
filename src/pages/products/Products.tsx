@@ -25,9 +25,9 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PER_PAGE } from "../../constant";
-import { createProduct, getProducts } from "../../http/api";
+import { createProduct, getProducts, updateProduct } from "../../http/api";
 import { FieldData, Product } from "../../types";
 import { format } from "date-fns";
 import { debounce } from "lodash";
@@ -93,6 +93,41 @@ const Products = () => {
   const [filterForm] = Form.useForm();
   const { user } = useAuthStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedProduct, setCurrentProduct] = useState<Product | null>(null);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setDrawerOpen(true);
+      console.log(selectedProduct);
+
+      const priceConfiguration = Object.entries(
+        selectedProduct.priceConfiguration
+      ).reduce((acc, [key, value]) => {
+        const strigifiedKey = JSON.stringify({
+          configurationKey: key,
+          priceType: value.priceType,
+        });
+
+        return {
+          ...acc,
+          [strigifiedKey]: value.availableOptions,
+        };
+      }, {});
+
+      const attributes = selectedProduct.attributes.reduce((acc, item) => {
+        return {
+          ...acc,
+          [item.name]: item.value,
+        };
+      }, {});
+      form.setFieldsValue({
+        ...selectedProduct,
+        priceConfiguration,
+        attributes,
+        categoryId: selectedProduct.category._id,
+      });
+    }
+  }, [form, selectedProduct]);
 
   const [queryParams, setQueryParams] = useState({
     limit: PER_PAGE,
@@ -146,8 +181,13 @@ const Products = () => {
   const queryClient = useQueryClient();
   const { mutate: productMutate, isPending } = useMutation({
     mutationKey: ["product"],
-    mutationFn: async (data: FormData) =>
-      createProduct(data).then((res) => res.data),
+    mutationFn: async (data: FormData) => {
+      if (selectedProduct) {
+        return updateProduct(data, selectedProduct._id).then((res) => res.data);
+      } else {
+        return createProduct(data).then((res) => res.data);
+      }
+    },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["product"] });
       form.resetFields();
@@ -172,7 +212,7 @@ const Products = () => {
       },
       {}
     );
-    const categoryId = JSON.parse(form.getFieldValue("categoryId"))._id;
+    const categoryId = form.getFieldValue("categoryId");
     const attributes = Object.entries(form.getFieldValue("attributes")).map(
       ([key, value]) => {
         return {
@@ -241,10 +281,15 @@ const Products = () => {
             {
               title: "Actions",
 
-              render: () => {
+              render: (_, record: Product) => {
                 return (
                   <Space>
-                    <Button type="link">Edit</Button>
+                    <Button
+                      type="link"
+                      onClick={() => setCurrentProduct(record)}
+                    >
+                      Edit
+                    </Button>
                   </Space>
                 );
               },
@@ -272,20 +317,22 @@ const Products = () => {
         />
 
         <Drawer
-          title={"Add Product"}
+          title={selectedProduct ? "Update Product" : "Add Product"}
           width={720}
           destroyOnClose
           open={drawerOpen}
           onClose={() => {
+            setCurrentProduct(null);
             form.resetFields();
-            setDrawerOpen((prev) => !prev);
+            setDrawerOpen(false);
           }}
           extra={
             <Space>
               <Button
                 onClick={() => {
+                  setCurrentProduct(null);
                   form.resetFields();
-                  setDrawerOpen((prev) => !prev);
+                  setDrawerOpen(false);
                 }}
               >
                 Cancel
@@ -297,14 +344,14 @@ const Products = () => {
                   onHandleSubmit();
                 }}
               >
-                Submit
+                {selectedProduct ? "Update" : "Submit"}
               </Button>
             </Space>
           }
           styles={{ body: { background: colorBgLayout } }}
         >
           <Form layout="vertical" form={form}>
-            <ProductForm />
+            <ProductForm form={form} />
           </Form>
         </Drawer>
       </Space>
