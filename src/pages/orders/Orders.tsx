@@ -1,13 +1,14 @@
-import { Breadcrumb, Flex, Space, Table, Tag, Typography } from "antd";
+import { Breadcrumb, Flex, Select, Space, Table, Tag, Typography } from "antd";
 import { RightOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
-import { Order } from "../../types";
+import { Order, Tenant } from "../../types";
 import { useQuery } from "@tanstack/react-query";
-import { getOrders } from "../../http/api";
+import { getOrders, getRestaurants } from "../../http/api";
 import { useState } from "react";
 import { format } from "date-fns";
 import { colorMapping } from "../../constant";
 import { capitalizeFristLatter } from "../products/helpers";
+import { useAuthStore } from "../../store";
 
 const columns = [
   {
@@ -100,20 +101,33 @@ const columns = [
   },
 ];
 
-const TENANTID = 3;
 const Orders = () => {
   const [page, setPage] = useState(1);
+  const [tenantId, setTenantId] = useState("");
+  const { user } = useAuthStore();
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ["orders", page, TENANTID],
+    queryKey: ["orders", page, tenantId],
     queryFn: async () => {
       const queryString = new URLSearchParams({
-        tenantId: String(TENANTID),
+        tenantId: String(tenantId),
         page: String(page),
       }).toString();
       return await getOrders(queryString).then((res) => res.data);
     },
   });
+
+  const { data: restaurent } = useQuery({
+    queryKey: ["restaurent"],
+    queryFn: () => {
+      return getRestaurants(`perPage=100&currentPage=1`);
+    },
+  });
+
+  const handleChange = (tenantId: string) => {
+    setTenantId(tenantId);
+    return;
+  };
 
   return (
     <Space size={"large"} direction="vertical" style={{ width: "100%" }}>
@@ -126,6 +140,23 @@ const Orders = () => {
           ]}
         />
       </Flex>
+      {user?.role === "admin" && (
+        <Flex align="center" gap={20}>
+          <Select
+            allowClear={true}
+            placeholder="Select restaurent"
+            onChange={handleChange}
+          >
+            {restaurent?.data.data.map((tenant: Tenant) => {
+              return (
+                <Select.Option key={tenant.id} value={tenant.id}>
+                  {tenant.name}
+                </Select.Option>
+              );
+            })}
+          </Select>
+        </Flex>
+      )}
       <Table
         columns={columns}
         rowKey={"_id"}
