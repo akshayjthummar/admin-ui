@@ -72,3 +72,66 @@ export interface Category {
   priceConfiguration: PriceConfiguration;
   attributes: Attribute[];
 }
+
+export enum PaymentMode {
+  CARD = "card",
+  CASH = "cash",
+}
+
+export enum OrderStatus {
+  RECEIVED = "received",
+  CONFRIMED = "confrimed",
+  PREPARED = "prepared",
+  OUT_FOR_DELIVERY = "out_for_delivery",
+  DELIVERED = "delivered",
+}
+
+export enum PaymentStatus {
+  PENDING = "pending",
+  PAID = "paid",
+  FAILED = "failed",
+}
+
+export type Topping = {
+  _id: string;
+  name: string;
+  image: string;
+  price: number;
+};
+export interface CartItems
+  extends Pick<Product, "_id" | "name" | "image" | "priceConfiguration"> {
+  chosenConfiguration: {
+    priceConfiguration: {
+      [key: string]: string;
+    };
+    selectedToppings: Topping[];
+  };
+  qty: number;
+  hash?: string;
+}
+
+export interface Customer {
+  _id: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface Order {
+  _id: string;
+  image: any;
+  cart: CartItems[];
+  customerId: Customer;
+  customer?: Customer;
+  totalAmount: number;
+  discount: number;
+  taxes: number;
+  deliveryCharges: number;
+  address: string;
+  tenantId: string;
+  comment?: string;
+  paymentMode: PaymentMode;
+  orderStatus: OrderStatus;
+  paymentStatus: PaymentStatus;
+  paymentId?: string;
+  createdAt: string;
+}

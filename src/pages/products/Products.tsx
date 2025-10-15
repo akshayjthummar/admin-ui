@@ -98,7 +98,6 @@ const Products = () => {
   useEffect(() => {
     if (selectedProduct) {
       setDrawerOpen(true);
-      console.log(selectedProduct);
 
       const priceConfiguration = Object.entries(
         selectedProduct.priceConfiguration

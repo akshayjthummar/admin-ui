@@ -21,6 +21,7 @@ import BasketIcon from "../components/icons/BasketIcon";
 import { foodIcon } from "../components/icons/FoodIcon";
 import UserIcon from "../components/icons/UserIcon";
 import { useLogout } from "../hooks/useLogout";
+import ShopIcon from "../components/icons/ShopIcon";
 
 const getMenuItems = (role: string) => {
   const baseItems = [
@@ -32,13 +33,18 @@ const getMenuItems = (role: string) => {
 
     {
       key: "/products",
-      icon: <Icon component={BasketIcon} />,
+      icon: <Icon component={foodIcon} />,
       label: <NavLink to={"/products"}>Products</NavLink>,
     },
     {
       key: "/promos",
       icon: <Icon component={GiftIcon} />,
       label: <NavLink to={"/promos"}>Promos</NavLink>,
+    },
+    {
+      key: "/orders",
+      icon: <Icon component={BasketIcon} />,
+      label: <NavLink to={"/orders"}>Orders</NavLink>,
     },
   ];
   if (role === "admin") {
@@ -50,7 +56,7 @@ const getMenuItems = (role: string) => {
     });
     menus.splice(2, 0, {
       key: "/restaurants",
-      icon: <Icon component={foodIcon} />,
+      icon: <Icon component={ShopIcon} />,
       label: <NavLink to={"/restaurants"}>Restaurants</NavLink>,
     });
 
