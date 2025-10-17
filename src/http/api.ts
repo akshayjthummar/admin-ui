@@ -47,3 +47,6 @@ export const updateProduct = (product: FormData, id: string) =>
 
 export const getOrders = (queryString: string) =>
   api.get(`/${ORDER_SERVICE}/orders?${queryString}`);
+
+export const getSingleOrder = (orderId: string, queryString: string) =>
+  api.get(`/${ORDER_SERVICE}/orders/${orderId}?${queryString}`);
