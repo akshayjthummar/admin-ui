@@ -1,5 +1,5 @@
 import { Tenant } from "../store";
-import { CreateUserData, Credentials } from "../types";
+import { CreateUserData, Credentials, OrderStatus } from "../types";
 import { api } from "./client";
 
 const AUTH_SERVICE = "api/auth";
@@ -50,3 +50,6 @@ export const getOrders = (queryString: string) =>
 
 export const getSingleOrder = (orderId: string, queryString: string) =>
   api.get(`/${ORDER_SERVICE}/orders/${orderId}?${queryString}`);
+
+export const changeStatus = (orderId: string, data: { status: OrderStatus }) =>
+  api.patch(`/${ORDER_SERVICE}/orders/change-status/${orderId}`, data);

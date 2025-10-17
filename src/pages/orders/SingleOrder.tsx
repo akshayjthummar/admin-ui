@@ -6,6 +6,7 @@ import {
   Flex,
   List,
   Row,
+  Select,
   Space,
   Tag,
   Typography,
@@ -14,25 +15,49 @@ import { Link, useParams } from "react-router-dom";
 import { RightOutlined } from "@ant-design/icons";
 import { colorMapping } from "../../constant";
 import { capitalizeFristLatter } from "../products/helpers";
-import { useQuery } from "@tanstack/react-query";
-import { getSingleOrder } from "../../http/api";
-import { Order, Topping } from "../../types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { changeStatus, getSingleOrder } from "../../http/api";
+import { Order, OrderStatus, Topping } from "../../types";
 import { format } from "date-fns";
 
 const SingleOrder = () => {
   const { orderId } = useParams();
   const { data: order } = useQuery<Order>({
-    queryKey: ["orders", orderId],
+    queryKey: ["order", orderId],
     queryFn: async () => {
       const queryString = new URLSearchParams({
         fields:
-          "cart,address,paymentMode,tenantId,totalAmount,comment,orderStatus,paymentStatus,createdAt",
+          "cart,address,customerId,paymentMode,tenantId,totalAmount,comment,orderStatus,paymentStatus,createdAt",
       }).toString();
       return await getSingleOrder(orderId as string, queryString).then(
         (res) => res.data
       );
     },
   });
+  const orderStatusOptions = [
+    { label: "Received", value: OrderStatus.RECEIVED },
+    { label: "Confrimed", value: OrderStatus.CONFRIMED },
+    { label: "Prepared", value: OrderStatus.PREPARED },
+    { label: "Out For Delivery", value: OrderStatus.OUT_FOR_DELIVERY },
+    { label: "Delivered", value: OrderStatus.DELIVERED },
+  ];
+
+  const queryClient = useQueryClient();
+  const { mutate } = useMutation({
+    mutationKey: ["order", orderId],
+    mutationFn: async (status: OrderStatus) => {
+      return await changeStatus(orderId as string, { status }).then(
+        (res) => res.data
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+    },
+  });
+  const handleStatusChange = (status: OrderStatus) => {
+    mutate(status);
+    console.log(status);
+  };
 
   if (!order) {
     return null;
@@ -49,6 +74,15 @@ const SingleOrder = () => {
             { title: `Order #${order?._id}` },
           ]}
         />
+        <Space>
+          <Typography.Text>Change Order Status</Typography.Text>
+          <Select
+            defaultValue={order.orderStatus}
+            style={{ width: 150 }}
+            onChange={handleStatusChange}
+            options={orderStatusOptions}
+          />
+        </Space>
       </Flex>
       <Row gutter={24}>
         <Col span={14}>
@@ -99,7 +133,11 @@ const SingleOrder = () => {
             <Space direction="vertical">
               <Flex style={{ flexDirection: "column" }}>
                 <Typography.Text type="secondary">Name</Typography.Text>
-                <Typography.Text>{`${order.customerId.firstName} ${order.customerId.lastName}`}</Typography.Text>
+                <Typography.Text>
+                  {order.customerId
+                    ? `${order.customerId.firstName} ${order.customerId.lastName}`
+                    : "Unknown Customer"}
+                </Typography.Text>{" "}
               </Flex>
               <Flex style={{ flexDirection: "column" }}>
                 <Typography.Text type="secondary">Address</Typography.Text>
