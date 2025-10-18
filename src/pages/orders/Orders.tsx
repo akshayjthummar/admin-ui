@@ -4,11 +4,12 @@ import { Link } from "react-router-dom";
 import { Order, Tenant } from "../../types";
 import { useQuery } from "@tanstack/react-query";
 import { getOrders, getRestaurants } from "../../http/api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { colorMapping } from "../../constant";
 import { capitalizeFristLatter } from "../products/helpers";
 import { useAuthStore } from "../../store";
+import socket from "../../lib/socket";
 
 const columns = [
   {
@@ -105,6 +106,24 @@ const Orders = () => {
   const [page, setPage] = useState(1);
   const [tenantId, setTenantId] = useState("");
   const { user } = useAuthStore();
+
+  useEffect(() => {
+    socket.on("update-order", (data) => {
+      console.log("data recived", data);
+    });
+    if (user?.tenant) {
+      socket.on("join", (data) => {
+        console.log("user joined", data.roomId);
+      });
+      socket.emit("join", {
+        tenantId: user.tenant.id,
+      });
+    }
+    return () => {
+      socket.off("join");
+      socket.off("update-order");
+    };
+  }, []);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["orders", page, tenantId],
