@@ -1,7 +1,9 @@
 import { io } from "socket.io-client";
 
-const socket = io(import.meta.env.VITE_SOCKET_SERVICE_URL);
-
+const socket = io("http://localhost:5504", {
+  transports: ["websocket"],
+  reconnection: true,
+});
 socket.on("connect", () => {
   console.log("connected socket", socket.id);
 });

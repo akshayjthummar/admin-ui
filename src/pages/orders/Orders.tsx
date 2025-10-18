@@ -108,22 +108,48 @@ const Orders = () => {
   const { user } = useAuthStore();
 
   useEffect(() => {
-    socket.on("update-order", (data) => {
-      console.log("data recived", data);
-    });
-    if (user?.tenant) {
-      socket.on("join", (data) => {
-        console.log("user joined", data.roomId);
-      });
-      socket.emit("join", {
-        tenantId: user.tenant.id,
-      });
-    }
-    return () => {
-      socket.off("join");
-      socket.off("update-order");
+    const handleUpdate = (data: any) => {
+      console.log("🔥 data received", data);
     };
-  }, []);
+
+    const handleJoin = (data: any) => {
+      console.log("✅ user joined room:", data.roomId);
+    };
+
+    socket.on("update-order", handleUpdate);
+    socket.on("join", handleJoin);
+
+    // Wait until user is ready, then join
+    if (user?.tenant?.id) {
+      console.log("📡 joining room with tenantId:", user.tenant.id);
+      socket.emit("join", { tenantId: user.tenant.id });
+    } else {
+      console.warn("⚠️ tenantId not ready yet");
+    }
+
+    return () => {
+      socket.off("join", handleJoin);
+      socket.off("update-order", handleUpdate);
+    };
+  }, [user?.tenant?.id]);
+
+  // useEffect(() => {
+  //   socket.on("update-order", (data) => {
+  //     console.log("data recived", data);
+  //   });
+  //   if (user?.tenant) {
+  //     socket.on("join", (data) => {
+  //       console.log("user joined", data.roomId);
+  //     });
+  //     socket.emit("join", {
+  //       tenantId: user.tenant.id,
+  //     });
+  //   }
+  //   return () => {
+  //     socket.off("join");
+  //     socket.off("update-order");
+  //   };
+  // }, []);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["orders", page, tenantId],
