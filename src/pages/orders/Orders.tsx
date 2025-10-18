@@ -1,8 +1,22 @@
-import { Breadcrumb, Flex, Select, Space, Table, Tag, Typography } from "antd";
+import {
+  Breadcrumb,
+  Flex,
+  message,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Typography,
+} from "antd";
 import { RightOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
-import { Order, Tenant } from "../../types";
-import { useQuery } from "@tanstack/react-query";
+import { Order, PaymentMode, PaymentStatus, Tenant } from "../../types";
+import {
+  InvalidateQueryFilters,
+  QueryClient,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { getOrders, getRestaurants } from "../../http/api";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
@@ -106,12 +120,53 @@ const Orders = () => {
   const [page, setPage] = useState(1);
   const [tenantId, setTenantId] = useState("");
   const { user } = useAuthStore();
+  const [messageApi, contextHolder] = message.useMessage();
 
+  const queryClient = useQueryClient();
   useEffect(() => {
     const handleUpdate = (data: any) => {
-      console.log("🔥 data received", data);
-    };
+      console.log("📨 update-order received:", data);
 
+      if (
+        (data.event_type === "ORDER_CREATE" &&
+          data.data.paymentMode === PaymentMode.CASH) ||
+        (data.event_type === "PAYMENT_STATUS_UPDATE" &&
+          data.data.paymentStatus === PaymentStatus.PAID &&
+          data.data.paymentMode === PaymentMode.CARD)
+      ) {
+        if (page === 1) {
+          queryClient.setQueryData(["orders", page, tenantId], (old: any) => {
+            if (!old) return;
+
+            const newOrder = data.data;
+
+            // ✅ Optional: check if it's already in the list
+            const alreadyExists = old.data.some(
+              (order: Order) => order._id === newOrder._id
+            );
+            if (alreadyExists) return old;
+
+            return {
+              ...old,
+              data: [newOrder, ...old.data], // 👈 Prepend new order
+              totalDocs: old.totalDocs + 1, // ✅ Update total count (optional)
+            };
+          });
+        } else {
+          // For other pages, refetch to stay in sync
+          queryClient.invalidateQueries([
+            "orders",
+            page,
+            tenantId,
+          ] as InvalidateQueryFilters);
+        }
+
+        messageApi.open({
+          type: "success",
+          content: "New order recived.",
+        });
+      }
+    };
     const handleJoin = (data: any) => {
       console.log("✅ user joined room:", data.roomId);
     };
@@ -175,46 +230,49 @@ const Orders = () => {
   };
 
   return (
-    <Space size={"large"} direction="vertical" style={{ width: "100%" }}>
-      <Flex justify="space-between">
-        <Breadcrumb
-          separator={<RightOutlined />}
-          items={[
-            { title: <Link to={"/dashboard"}>Dashboard</Link> },
-            { title: "Orders" },
-          ]}
-        />
-      </Flex>
-      {user?.role === "admin" && (
-        <Flex align="center" gap={20}>
-          <Select
-            allowClear={true}
-            placeholder="Select restaurent"
-            onChange={handleChange}
-          >
-            {restaurent?.data.data.map((tenant: Tenant) => {
-              return (
-                <Select.Option key={tenant.id} value={tenant.id}>
-                  {tenant.name}
-                </Select.Option>
-              );
-            })}
-          </Select>
+    <>
+      {contextHolder}
+      <Space size={"large"} direction="vertical" style={{ width: "100%" }}>
+        <Flex justify="space-between">
+          <Breadcrumb
+            separator={<RightOutlined />}
+            items={[
+              { title: <Link to={"/dashboard"}>Dashboard</Link> },
+              { title: "Orders" },
+            ]}
+          />
         </Flex>
-      )}
-      <Table
-        columns={columns}
-        rowKey={"_id"}
-        dataSource={orders?.data || []}
-        loading={isLoading}
-        pagination={{
-          total: orders?.totalDocs,
-          current: orders?.page,
-          pageSize: orders?.limit,
-          onChange: (page) => setPage(page),
-        }}
-      />
-    </Space>
+        {user?.role === "admin" && (
+          <Flex align="center" gap={20}>
+            <Select
+              allowClear={true}
+              placeholder="Select restaurent"
+              onChange={handleChange}
+            >
+              {restaurent?.data.data.map((tenant: Tenant) => {
+                return (
+                  <Select.Option key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </Select.Option>
+                );
+              })}
+            </Select>
+          </Flex>
+        )}
+        <Table
+          columns={columns}
+          rowKey={"_id"}
+          dataSource={orders?.data || []}
+          loading={isLoading}
+          pagination={{
+            total: orders?.totalDocs,
+            current: orders?.page,
+            pageSize: orders?.limit,
+            onChange: (page) => setPage(page),
+          }}
+        />
+      </Space>
+    </>
   );
 };
 
